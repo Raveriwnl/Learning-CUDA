@@ -9,7 +9,6 @@
 // kthLargest CUDA 核心函数：用于并行归约求最大值
 // 每个 block 计算自身的局部最大值，最终在主机端进行全局归约
 // 内核仅支持 k=1（即求最大值），k>1 的情况在主机端通过排序处理
-// 实现原理：利用共享内存和线程并行归约，提升最大值查找效率
 template <typename T>
 __global__ void reduceMaxKernel(const T* d_input, T* d_out, size_t n) {
     __shared__ T sdata[256];
@@ -29,11 +28,8 @@ __global__ void reduceMaxKernel(const T* d_input, T* d_out, size_t n) {
     if (tid == 0) d_out[blockIdx.x] = sdata[0];
 }
 
-// Partition kernel（快速选择的分区内核，未使用，仅为完整 GPU 版本预留）
-// 当前实现仅在 k=1 时采用 GPU 最大值归约，k>1 时在主机端处理
 // 主机端 kthLargest 实现
 // k=1 时调用 GPU 并行归约求最大值，k>1 时在主机端排序选取第 k 大
-// 设计思路：结合 GPU 并行归约与主机排序，兼顾性能与通用性
 
 template <typename T>
 T kthLargest(const std::vector<T>& h_input, size_t k) {
